@@ -1,0 +1,40 @@
+name: Rust
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        rust: [stable]
+        include:
+          - os: macOS-latest
+            rust: stable
+            target: aarch64-apple-darwin
+            install_rust_target: true
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          target: ${{ matrix.target }}
+      - run: rustup target add ${{ matrix.target }}
+        if: matrix.install_rust_target
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --target ${{ matrix.target }}
